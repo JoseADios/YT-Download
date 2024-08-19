@@ -4,6 +4,7 @@ import time
 from pytube.innertube import _default_clients
 _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
+
 class SearchVideos:
     def __init__(self):
         self.ytListComplete = []
@@ -41,17 +42,16 @@ class SearchVideos:
     def getDownOptions(self):
         options = []
         count = 0
-        videos = self.ytListComplete[:5]
 
-        for video in videos:
+        for video in self.ytListComplete[:5]:
             st = {}
             streamList = []
             for stream in video.streams.fmt_streams:
                 streamList.append(stream)
-            
+
             count = count + 1
             options.append(streamList)
-        
+
         return options
 
 
@@ -80,22 +80,22 @@ def limitText(text):
 def downVideo(x):
     print('Descargando '+str(x))
 
+
 def format_att(value, name):
     return f"{value}{name}" if value else ""
 
 # crear una funcion para crear el elemento de video
+
+
 def showVideos(results):
     optionsByVideo = objSearch.getDownOptions()
-    
+
     for x in range(len(results)):
         with st.container(height=220, border=True):
             res = results[x]
             col1, col2 = st.columns(2, vertical_alignment='center')
 
             options = optionsByVideo[x]
-
-            # for op in options:
-            #     print(f'Opcion: {op}')
 
             seconds = time.strftime("%H:%M:%S", time.gmtime(res['length']))
             # Crear un contenedor HTML para la miniatura con el tiempo del video
@@ -114,12 +114,14 @@ def showVideos(results):
             videoTitle = '##### ' + limitText(res['title'])
 
             col2.markdown(videoTitle, help=res['title'])
-            
+
             quality = col2.selectbox(
-                'Calidad', options, key='quality'+str(x), format_func= lambda x: f'{"📽️" if "video" in str(x.mime_type)  else "🎼"} {x.mime_type} {format_att(getattr(x, "resolution", ""),"")} {format_att(getattr(x, "fps", ""), "fps")} {format_att(getattr(x, "abr", ""), "")}')
-            
-            if col2.button('Descargar', key='btnDown'+str(x)):
+                'Calidad', options, key='quality'+str(x), format_func=lambda x: f'{"📽️" if "video" in str(x.mime_type)  else "🎼"} {x.mime_type} {format_att(getattr(x, "resolution", ""),"")} {format_att(getattr(x, "fps", ""), "fps")} {format_att(getattr(x, "abr", ""), "")}')
+
+            if col2.button('Descargar ', key='btnDown'+str(x)):
                 downVideo(x)
+
+            col2.text(str(quality.filesize_mb) + 'Mb')
 
 
 results = objSearch.getObjects()
