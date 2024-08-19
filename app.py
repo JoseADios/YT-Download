@@ -1,7 +1,8 @@
 import streamlit as st
 from pytube import Search
 import time
-
+from pytube.innertube import _default_clients
+_default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
 class SearchVideos:
     def __init__(self):
@@ -30,7 +31,6 @@ class SearchVideos:
                 'thumbnail_url': video.thumbnail_url,
                 'length': video.length,  # Duración en segundos
                 'watch_url': video.watch_url,
-                'streams': video.streams,
             }
             video_data.append(video_info)
         self.ytList = video_data
@@ -41,11 +41,12 @@ class SearchVideos:
     def getDownOptions(self):
         options = []
         count = 0
+        videos = self.ytListComplete[:5]
 
-        for video in self.ytList:
+        for video in videos:
             st = {}
             streamList = []
-            for stream in video['streams'].fmt_streams:
+            for stream in video.streams.fmt_streams:
                 streamList.append(stream)
             
             count = count + 1
@@ -63,7 +64,7 @@ st.title('You:red[Tube] Download ⬇️')
 
 with st.form("my_form"):
     col1, col2 = st.columns([5, 1], vertical_alignment='bottom')
-    searchTexkt = col1.text_input('Palabra clave o enlace', 'tomorrow')
+    searchTexkt = col1.text_input('Palabra clave o enlace', 'no me llames')
     button = col2.form_submit_button('Buscar  🔎')
 
 objSearch.setData(searchTexkt)
@@ -80,7 +81,7 @@ def downVideo(x):
     print('Descargando '+str(x))
 
 def format_att(value, name):
-    return f"{value} {name}" if value else ""
+    return f"{value}{name}" if value else ""
 
 # crear una funcion para crear el elemento de video
 def showVideos(results):
@@ -115,7 +116,7 @@ def showVideos(results):
             col2.markdown(videoTitle, help=res['title'])
             
             quality = col2.selectbox(
-                'Calidad', options, key='quality'+str(x), format_func= lambda x: f'{x.mime_type} {format_att(getattr(x, "resolution", ""),"")} {format_att(getattr(x, "fps", ""), "fps")} {format_att(getattr(x, "abr", ""), "")}')
+                'Calidad', options, key='quality'+str(x), format_func= lambda x: f'{"📽️" if "video" in str(x.mime_type)  else "🎼"} {x.mime_type} {format_att(getattr(x, "resolution", ""),"")} {format_att(getattr(x, "fps", ""), "fps")} {format_att(getattr(x, "abr", ""), "")}')
             
             if col2.button('Descargar', key='btnDown'+str(x)):
                 downVideo(x)
