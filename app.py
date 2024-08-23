@@ -7,10 +7,8 @@ _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
 
 
 ytListComplete = []
-# ytList = []
-
-# get results from youtube
-
+if 'downloadedList' not in st.session_state:
+    st.session_state.downloadedList = []
 
 def setData(searchKey):
     global ytListComplete
@@ -29,23 +27,39 @@ def limitText(text):
     return text
 
 
-def downVideo(ytObject, itag, path):
-    
-    
-    print('Descargando...')
-    # stream = ytObject.streams.get_by_itag(itag)
-    # stream.download()
-    print('Video descargado')
-
-
-
 def format_att(value, name):
     return f"{value}{name}" if value else ""
 
+def downVideo(ytObject, itag):
+    folder_path = './'
+
+    dialog = wx.DirDialog(None, 'Seleccione una carpeta:', style=wx.DD_DEFAULT_STYLE | wx.DD_NEW_DIR_BUTTON)
+        
+    if dialog.ShowModal() == wx.ID_OK:
+        folder_path = dialog.GetPath() # folder_path will contain the path of the folder you have selected as string
+    dialog.Destroy()
+
+    
+    print('Descargando...')
+    stream = ytObject.streams.get_by_itag(itag)
+
+    # agregar elemento a la lista
+    icon = "📽️" if "video" == str(stream.type)  else "🎼"
+    st.session_state.downloadedList.append({'name': f"{icon} {stream.default_filename}",
+                                            'path': folder_path})
+    print(st.session_state.downloadedList)
+    stream.download(folder_path)
+    print('Archivo descargado')
+
 
 # Crear la aplicación wx antes de usar cualquier método wx
-app = wx.App(False)
+app = wx.App(False)   
 
+# ---------------------------------------- Interfaz --------------------------------------
+
+# Sidebar content
+sidebar = st.sidebar
+sidebar.subheader('Descargas ⬇️')
 
 # titulo
 st.title('You:red[Tube] Download ⬇️')
@@ -92,23 +106,8 @@ for video in ytListComplete:
     quality = col2.selectbox(
         'Calidad', options, key='quality'+str(x), format_func=lambda x: f'{"📽️" if "video" == str(x.type)  else "🎼"} {x.mime_type} {format_att(getattr(x, "resolution", ""),"")} {format_att(getattr(x, "fps", ""), "fps")} {format_att(getattr(x, "abr", ""), "")}')
 
-    with col2.popover("Descargar", use_container_width=True):
-
-        folder_path = './'
-
-        placeholder = st.empty()
-
-        dcol1, dcol2 = st.columns(2, vertical_alignment='bottom')
-        if dcol1.button('Seleccionar 📁', key=f'select{x}', use_container_width=True):
-            dialog = wx.DirDialog(None, 'Seleccione una carpeta:', style=wx.DD_DEFAULT_STYLE | wx.DD_NEW_DIR_BUTTON)
-            
-            if dialog.ShowModal() == wx.ID_OK:
-                folder_path = dialog.GetPath() # folder_path will contain the path of the folder you have selected as string
-            dialog.Destroy()
-
-        placeholder.text(folder_path)
-
-        dcol2.button('Aceptar ⬇️', key=f'accept{x}', on_click=downVideo(video, quality.itag, folder_path) , use_container_width=True)
+    if col2.button('Descargar ⬇️', key=f'accept{x}', use_container_width=True):
+        downVideo(video, quality.itag) 
 
 
     col2.text(str(quality.filesize_mb) + 'Mb')
@@ -116,6 +115,13 @@ for video in ytListComplete:
     x += 1
 
 
-# Sidebar content
+
+
+# "with" notation
+with sidebar:
+    for video in st.session_state.downloadedList:
+        st.text(video['name'], help=video['path'])
+
+
 st.markdown("© 2024 YouTube Download.")
 st.markdown('---')
