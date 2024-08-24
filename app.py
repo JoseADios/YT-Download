@@ -30,6 +30,11 @@ def limitText(text):
 def format_att(value, name):
     return f"{value}{name}" if value else ""
 
+def saveVideoName(icon, file_name, path):
+    st.session_state.downloadedList.append({'name': f"{icon} {file_name}",
+                                            'path': path})
+    st.toast('Descarga completada!', icon='🎉')
+
 def downVideo(ytObject, itag):
     folder_path = './'
 
@@ -37,19 +42,25 @@ def downVideo(ytObject, itag):
         
     if dialog.ShowModal() == wx.ID_OK:
         folder_path = dialog.GetPath() # folder_path will contain the path of the folder you have selected as string
+        print('Descargando...')
+        stream = ytObject.streams.get_by_itag(itag)
+
+        # agregar elemento a la lista
+        icon = "📽️" if "video" == str(stream.type)  else "🎼"
+        
+        stream.download(folder_path)
+        ytObject.register_on_complete_callback(saveVideoName(icon, stream.default_filename, folder_path))
+        print('Archivo descargado')
     dialog.Destroy()
 
-    
-    print('Descargando...')
-    stream = ytObject.streams.get_by_itag(itag)
 
-    # agregar elemento a la lista
-    icon = "📽️" if "video" == str(stream.type)  else "🎼"
-    st.session_state.downloadedList.append({'name': f"{icon} {stream.default_filename}",
-                                            'path': folder_path})
-    print(st.session_state.downloadedList)
-    stream.download(folder_path)
-    print('Archivo descargado')
+# configuracion de la pagina
+st.set_page_config(
+   page_title="YT Down Local",
+   page_icon="⬇️",
+   layout="centered",
+   initial_sidebar_state="expanded",
+)
 
 
 # Crear la aplicación wx antes de usar cualquier método wx
@@ -59,27 +70,32 @@ app = wx.App(False)
 
 # Sidebar content
 sidebar = st.sidebar
-sidebar.subheader('Descargas ⬇️')
+expanderDowns = sidebar.expander('Descargas', True, icon='⬇️')
+expanderDowns.write('')
+sidebar.divider()
+sidebar.markdown("© 2024 YouTube Download.")
+sidebar.divider()
+
 
 # titulo
 st.title('You:red[Tube] Download ⬇️')
 
 with st.form("my_form"):
     col1, col2 = st.columns([5, 1], vertical_alignment='bottom')
-    searchTexkt = col1.text_input('Palabra clave o enlace', 'no me llames')
+    searchTexkt = col1.text_input('Palabra clave o link del video')
     button = col2.form_submit_button('Buscar  🔎')
 
 st.markdown("---")
 
 
+# Obtener la data -------------
 setData(searchTexkt)
+
 
 x = 0
 
-start_time = time.time()
 
 for video in ytListComplete:
-
     col1, col2 = st.columns(2, vertical_alignment='center')
     seconds = time.strftime("%H:%M:%S", time.gmtime(video.length))
 
@@ -118,10 +134,7 @@ for video in ytListComplete:
 
 
 # "with" notation
-with sidebar:
+with expanderDowns:
     for video in st.session_state.downloadedList:
         st.text(video['name'], help=video['path'])
 
-
-st.markdown("© 2024 YouTube Download.")
-st.markdown('---')
