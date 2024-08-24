@@ -29,4 +29,3 @@ Este software se proporciona con fines educativos. La descarga de contenido prot
 
 - 🖥️ `streamlit`
 - 📦 `pytube`
-- 🧰 `wxPython`
