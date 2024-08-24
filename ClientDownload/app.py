@@ -1,7 +1,6 @@
 import streamlit as st
 from pytube import Search
 import time
-import wx
 from streamlit.components.v1 import html
 from pytube.innertube import _default_clients
 _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
@@ -39,10 +38,6 @@ st.set_page_config(
    layout="centered",
    initial_sidebar_state="expanded",
 )
-
-
-# Crear la aplicación wx antes de usar cualquier método wx
-app = wx.App(False)   
 
 
 
